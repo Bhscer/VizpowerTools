@@ -270,20 +270,13 @@ elif main_choice == "1":
                 cfg.read(file_name)
                 MeetId = cfg.get(class_enter_name, 'MeetId')
                 timesId = cfg.get(class_enter_name, 'timesId')
-                if "Meeting-Subject" in l_tmp:
-                    Meeting_Subject = l_tmp[16:]
-                if "MeetCurrTime" in l_tmp:
-                    MeetCurrTime = l_tmp[13:]
-                if "Meeting-Duration" in l_tmp:
-                    Meeting_Duration = l_tmp[17:]
-                if "EastimateTime" in l_tmp:
-                    EastimateTime = l_tmp[14:]
-                if "MeetStartTime" in l_tmp:
-                    MeetStartTime = l_tmp[14:]
-                if "Meeting-Chairman" in l_tmp:
-                    Meeting_Chairman = l_tmp[17:]
-                if "Meeting-Project" in l_tmp:
-                    Meeting_Project = l_tmp[16:]
+                Meeting_Subject = cfg.get(class_enter_name, 'Meeting-Subject')
+                MeetCurrTime = cfg.get(class_enter_name, 'MeetCurrTime')
+                Meeting_Duration = cfg.get(class_enter_name, 'Meeting-Duration')
+                EastimateTime = cfg.get(class_enter_name, 'EastimateTime')
+                MeetStartTime = cfg.get(class_enter_name, 'MeetStartTime')
+                Meeting_Chairman = cfg.get(class_enter_name, 'Meeting-Chairman')
+                Meeting_Project = cfg.get(class_enter_name, 'Meeting-Project')
                 if "Meeting-BeforeTime" in l_tmp:
                     Meeting_BeforeTime = l_tmp[19:]
                 if "userId" in l_tmp:
