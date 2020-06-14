@@ -1,114 +1,14 @@
-import requests
-import time
-import hashlib
-import os
-import win32api
-import uuid,re
-import json
-import datetime
-import base64
+import requests,time,hashlib,os,win32api,uuid,re,json,datetime,base64,subprocess,pyperclip
 from configparser import ConfigParser
-import subprocess
+from tkinter import *
+
+from PIL import Image, ImageTk
+
+from tkinter import ttk
 
 app_version = 1.01
 
-r = requests.get("https://bhscer.github.io/wxb_py/files/app_info.json")
-update_file_name = "app_info.json"
-with open(update_file_name, "wb") as code:
-    code.write(r.content)
-with open("app_info.json", 'r') as f:
-    a = json.load(f)
-if a['avliable'] == 1:
-    if a['newest_version'] != app_version:
-        app_v_newest = a['newest_version']
-        app_newest = 0
-        if a['must_update'] == 1:
-            print("检测到新版本")
-            print("该版本为强制更新版本")
-            print("更新日志如下")
-            print(a['update_log'])
-            input("按任意键开始更新...")
-        elif a['must_update'] == 0:
-            print("检测到新版本")
-            print("更新日志如下")
-            print(a['update_log'])
-            update_flag = input("按y开始更新 n下次更新")
-            if update_flag == "y":
-               print("update start")#update start
-            elif update_flag == "n":
-               print("update stopped")#update stopped
-    else:
-        app_newest = 1
-elif a['avliable'] == 0:
-    print(a['close_message'])
-    input("按任意键退出...")
-    End
-os.remove(update_file_name)
-    
-#判断wxb是否存在
-windirdisk = (os.getenv("windir"))[0:3]
-if os.path.exists(windirdisk + "ProgramData\Microsoft\Windows\Start Menu\Programs\无限宝"):
-    if os.path.exists(windirdisk + "Program Files (x86)\wxb"):
-        imeetingpath = windirdisk + "Program Files (x86)\wxb\iMeeting.exe"
-        #print("发现imeeting文件：" + imeetingpath)
-    elif os.path.exists(windirdisk + "Program Files\wxb"):
-        imeetingpath = windirdisk + "Program Files\wxb\iMeeting.exe"
-        #print("发现imeeting文件：" + imeetingpath)
-    else:
-        print("很抱歉，我们找不到您的无限宝所在位置" + "\n" + "请尝试把本软件复制到无限宝目录中并再次打开")
-        imeetingpath_1 = input("或者在此处输入您的imeeting文件所在位置： ")
-        if os.path.exists(imeetingpath_1):
-            imeetingpath = imeetingpath_1
-        else:
-            print("输入的路径不存在")
-            input("press enter to exit.")
-elif os.path.exists("iMeeting.exe"):
-    imeetingpath = "iMeeting.exe"
-    print("发现imeeting文件：" + imeetingpath)
-else:
-    print("很抱歉，我们找不到您的无限宝所在位置" + "\n" + "请尝试重新安装无限宝" + "\n" + "或尝试把本软件复制到无限宝目录中并再次打开")
-    imeetingpath_1 = input("或者在此处输入您的imeeting文件所在位置： ")
-    if os.path.exists(imeetingpath_1):
-        imeetingpath = imeetingpath_1
-    else:
-        print("输入的路径不存在")
-        input("press enter to exit.")
-remembered = 0
 
-if os.path.exists("user_info.txt"):
-    f = open("user_info.txt",'r', encoding='UTF-8')
-    r_text = f.readlines()[0]     #读取内容
-f.close
-if os.path.exists("user_info.txt") and (os.path.getsize("user_info.txt")) != 0 and ("£" in r_text) and ("¢" in r_text) and ("∆" in r_text):  #存在密码文件
-    n = 1
-    uid_time = 0
-    pwd_time = 0
-    while n <= len(r_text):
-            r_search_tmp = r_text[n:n+1]
-            if r_search_tmp == "£":    #读取域名
-                r_prefix_end = n
-                prefix = r_text[1:n]
-            if r_search_tmp == "¢":    #读取账号
-                uid_time = uid_time + 1
-                r_uid_end = 0
-                r_uid_start = r_prefix_end + 2
-                if uid_time == 2:
-                    r_uid_end = n
-                user_name = r_text[r_uid_start:r_uid_end]
-            if r_search_tmp == "∆":    #读取密码
-                pwd_time = pwd_time + 1
-                r_pwd_end = 0
-                r_pwd_start = r_uid_end + 2
-                if pwd_time == 2:
-                    r_pwd_end = n
-                password = r_text[r_pwd_start:r_pwd_end]
-            n = n + 1
-    #print("发现已保存的信息，正在登录")
-    remembered = 1
-else:
-    prefix = input("Server prefix (example: the prefix for cc.kehou.com is \"cc\"): ")
-    user_name = input("Username: ")
-    password = input("Password: ")
 
 #取 MD5
 def string_to_md5(string):
@@ -157,6 +57,17 @@ def get_wxb_response():
     with open(file_name, "wb") as code:
         code.write(r.content)
 #读取wxb回复内容
+def user_info_reader():
+    cfg = ConfigParser()
+    cfg.read(file_name)
+    webuserid = cfg.get('userinfo1', 'webuserid')
+    username = cfg.get('userinfo1', 'username')
+    name_1 = cfg.get('userinfo1', 'name')
+    unit = cfg.get('userinfo1', 'unit')
+    classname = cfg.get('userinfo1', 'classname')
+    role = cfg.get('userinfo1', 'role')
+    headimgurl = cfg.get('userinfo1', 'headimgurl')
+    projectname = cfg.get('userinfo1', 'projectname')
 def info_reader():
     class_enter_name = "[mt" + attend_class_number + "]"
     cfg = ConfigParser()
@@ -327,255 +238,646 @@ def auto_class():
                     # 还没上课
                     # 上课
                     print("进入课堂...")
-
 file_name = "wxb_response.ini"
 
-while 1 == 1:
-    print("\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n")
-    print("无限宝登录工具 v" + str(app_version))
-    print("***************\n"
-          "\n"
-          "1.单门上课\n"
-          "2.自动上课\n"
-          "3.用户信息\n"
-          "4.账号管理\n"
-          "5.软件设置\n"
-          "\n"
-          "***************\n")
-    main_choice = input("输入你的指令: ")
+#ui用
+def close_update_windows():
+    load_windows.overrideredirect(1)
+    ui_load_pic1_load = Image.open('res\pic\pic_load_checkwxbpath.png')
+    ui_load_pic1_address = ImageTk.PhotoImage(ui_load_pic1_load)
+    ui_load_pic1 = Label(load_windows, image=ui_load_pic1_address)
+    ui_load_pic1.image = ui_load_pic1_address
+    ui_load_pic1.place(x=-2, y=-2)
+    # 判断wxb是否存在
+    windirdisk = (os.getenv("windir"))[0:3]
+    if os.path.exists(windirdisk + "ProgramData\Microsoft\Windows\Start Menu\Programs\无限宝"):
+        if os.path.exists(windirdisk + "Program Files (x86)\wxb"):
+            imeetingpath = windirdisk + "Program Files (x86)\wxb\iMeeting.exe"
+            # print("发现imeeting文件：" + imeetingpath)
+        elif os.path.exists(windirdisk + "Program Files\wxb"):
+            imeetingpath = windirdisk + "Program Files\wxb\iMeeting.exe"
+            # print("发现imeeting文件：" + imeetingpath)
+        else:
+            print("很抱歉，我们找不到您的无限宝所在位置" + "\n" + "请尝试把本软件复制到无限宝目录中并再次打开")
+            imeetingpath_1 = input("或者在此处输入您的imeeting文件所在位置： ")
+            if os.path.exists(imeetingpath_1):
+                imeetingpath = imeetingpath_1
+            else:
+                print("输入的路径不存在")
+                input("press enter to exit.")
+    elif os.path.exists("iMeeting.exe"):
+        imeetingpath = "iMeeting.exe"
+        print("发现imeeting文件：" + imeetingpath)
+    else:
+        print("很抱歉，我们找不到您的无限宝所在位置" + "\n" + "请尝试重新安装无限宝" + "\n" + "或尝试把本软件复制到无限宝目录中并再次打开")
+        imeetingpath_1 = input("或者在此处输入您的imeeting文件所在位置： ")
+        if os.path.exists(imeetingpath_1):
+            imeetingpath = imeetingpath_1
+        else:
+            print("输入的路径不存在")
+            input("press enter to exit.")
 
-    if main_choice == "1":
-        print("正在登录")
-        salt = str(int(time.time()))
-        pwd = string_to_md5(user_name + password + salt + "WINUPON")
-        pwd2 = string_to_md5(user_name + string_to_md5(password) + salt + "WINUPON")
-        device_mac = uuid.uuid1().hex[-12:].upper()
-        device_mac = ":".join(re.findall(r".{2}", device_mac))
-        url_final = "http://" + prefix + ".kehou.com/courseList.action?uid=" + user_name + "&pwd=" + pwd + "&pwd2=" + pwd2 + "&salt=" + salt + "&callfrom=vplogintool&mac=" + device_mac
-        url_final = url_final.replace(" ", "")
-        # print(url_final)
-        r = requests.get(url_final)
-        file_name = "wxb_response.ini"
-        with open(file_name, "wb") as code:
-            code.write(r.content)
-        f = open(file_name)
-        r_line2 = f.readlines()[2]
-        f.close
-        # 读取行数
-        line_count = 0
-        f = open(file_name, "r")
-        for line in f.readlines():
-            line_count = line_count + 1
-        f.close
 
-        # 分析
-        if "[error]" in r_line2:
+
+def exit_app():
+    os.remove("wxb_response.ini")
+    os.remove("app_info.json")
+    os._exit(0)
+def main_choice_m():
+    main_choice = shell_textbox.get()
+    if main_choice == "1" or main_choice == "2" or main_choice == "3" or main_choice == "4" or main_choice == "5":
+        #tkinter.messagebox.askokcancel("Hello Python", "1")
+        if main_choice == "1":
+            print("正在登录")
+            print(user_name + password + prefix)
+            salt = str(int(time.time()))
+            pwd = string_to_md5(user_name + password + salt + "WINUPON")
+            pwd2 = string_to_md5(user_name + string_to_md5(password) + salt + "WINUPON")
+            device_mac = uuid.uuid1().hex[-12:].upper()
+            device_mac = ":".join(re.findall(r".{2}", device_mac))
+            url_final = "http://" + prefix + ".kehou.com/courseList.action?uid=" + user_name + "&pwd=" + pwd + "&pwd2=" + pwd2 + "&salt=" + salt + "&callfrom=vplogintool&mac=" + device_mac
+            url_final = url_final.replace(" ", "")
+            # print(url_final)
+            r = requests.get(url_final)
+            file_name = "wxb_response.ini"
+            with open(file_name, "wb") as code:
+                code.write(r.content)
             f = open(file_name)
-            r_line3 = f.readlines()[3]
-            f = open(file_name)
-            r_line4 = f.readlines()[4]
-            print("发生错误 " + r_line3[6:] + r_line4[8:])
-        elif "[userinfo1]" in r_line2:
-            print("您没有正在上的课哦")
-        elif "[update]" in r_line2:
-            print("登陆成功")
-            # 保存账号密码etc.
-            w_prefix = "£" + prefix + "£"
-            w_user_name = "¢" + user_name + "¢"
-            w_password = "∆" + password + "∆"
-            f = open("user_info.txt", 'w', encoding='UTF-8')
-            f.write(w_prefix + w_user_name + w_password)
+            r_line2 = f.readlines()[2]
             f.close
-            f = open(file_name)
-            class_ing_text1 = (f.readlines()[18])[5:]
+            # 读取行数
+            line_count = 0
+            f = open(file_name, "r")
+            for line in f.readlines():
+                line_count = line_count + 1
             f.close
-            # print(len(class_ing_text1))
-            class_ing_number = 0
-            if len(class_ing_text1) == 2:
-                class_ing_number = 1
-            elif 3 <= len(class_ing_text1) <= 17:
-                class_ing_number = ((len(class_ing_text1)) / 2)
-            elif len(class_ing_text1) > 17:
-                class_ing_number = 9 + (((len(class_ing_text1) - 18)) / 3)
-            if class_ing_number == 0:
+
+            # 分析
+            if "[error]" in r_line2:
+                f = open(file_name)
+                r_line3 = f.readlines()[3]
+                f = open(file_name)
+                r_line4 = f.readlines()[4]
+                print("发生错误 " + r_line3[6:] + r_line4[8:])
+            elif "[userinfo1]" in r_line2:
                 print("您没有正在上的课哦")
-            else:
-                print(" ")
-                print("您现在有 " + str(int(class_ing_number)) + " 节直播课")
-                print(" ")
-                line_count_1 = 0
-                line_count_2 = 0
-                while line_count_1 < line_count:
-                    f = open(file_name)
-                    if "mtname" in (f.readlines()[line_count_1]):
-                        if line_count_2 < 8:
-                            if (line_count_2 + 1) <= class_ing_number:
-                                f = open(file_name)
-                                print(str(line_count_2 + 1) + " " + ((f.readlines()[line_count_1])[8:]))
-                        elif line_count_2 > 8:
-                            if (line_count_2 + 1) <= class_ing_number:
-                                f = open(file_name)
-                                print(str(line_count_2 + 1) + " " + ((f.readlines()[line_count_1])[9:]))
-                        line_count_2 = line_count_2 + 1
-                    line_count_1 = line_count_1 + 1
-                attend_class_number = input("输入您要上的课序号: ")
-                if int(attend_class_number) <= class_ing_number:
-                    # print(line_count_2)
-                    info_reader()
-                    print(" ")
-                    sif_dontlockclass = input("是否取消自动锁定课堂？ （y/n）")
-                    if ("y" in sif_dontlockclass) or ("Y" in sif_dontlockclass):
-                        ClassAutoLock = "0"
-                    elif ("n" in sif_dontlockclass) or ("N" in sif_dontlockclass):
-                        ClassAutoLock = "1"
-                    sif_showonlinecount = input("是否显示课堂在线人数？ （y/n）")
-                    if ("y" in sif_showonlinecount) or ("Y" in sif_showonlinecount):
-                        ShowUserCount = "1"
-                    elif ("n" in sif_showonlinecount) or ("N" in sif_showonlinecount):
-                        ShowUserCount = "1"
-                    sif_recordallowed = input("是否解除录屏限制？ （y/n）")
-                    if ("y" in sif_recordallowed) or ("Y" in sif_recordallowed):
-                        RecordBlackList = ""
-                    print("开始生成shell命令")
-                    f = open(file_name)
-                    updatedirurl = (f.readlines()[3])[13:]
-                    f.close
-                    f = open(file_name)
-                    exeurl = (f.readlines()[6])[7:]
-                    f.close
-                    shell_maker()
-                    print("shell命令生成成功")
-                    print("正在启动无限宝")
-                    #f = open("wxb_shell.txt", "w")
-                    #f.write(r_s)
-                    #f.close()
-                    #os.startfile("wxb_open.exe")
-                    win32api.ShellExecute(0, 'open',imeetingpath,r_s, '', 1)
-                    # win32api.ShellExecute(0, 'open',"wxb_open.exe",'', '', 1)
-
+            elif "[update]" in r_line2:
+                print("登陆成功")
+                # 保存账号密码etc.
+                w_prefix = "£" + prefix + "£"
+                w_user_name = "¢" + user_name + "¢"
+                w_password = "∆" + password + "∆"
+                f = open("user_info.txt", 'w', encoding='UTF-8')
+                f.write(w_prefix + w_user_name + w_password)
+                f.close
+                f = open(file_name)
+                class_ing_text1 = (f.readlines()[18])[5:]
+                f.close
+                # print(len(class_ing_text1))
+                class_ing_number = 0
+                if len(class_ing_text1) == 2:
+                    class_ing_number = 1
+                elif 3 <= len(class_ing_text1) <= 17:
+                    class_ing_number = ((len(class_ing_text1)) / 2)
+                elif len(class_ing_text1) > 17:
+                    class_ing_number = 9 + (((len(class_ing_text1) - 18)) / 3)
+                if class_ing_number == 0:
+                    print("您没有正在上的课哦")
                 else:
-                    print("你输入的内容有误")
-        else:
-            print("与服务器联系失败")
+                    print(" ")
+                    print("您现在有 " + str(int(class_ing_number)) + " 节直播课")
+                    print(" ")
+                    line_count_1 = 0
+                    line_count_2 = 0
+                    while line_count_1 < line_count:
+                        f = open(file_name)
+                        if "mtname" in (f.readlines()[line_count_1]):
+                            if line_count_2 < 8:
+                                if (line_count_2 + 1) <= class_ing_number:
+                                    f = open(file_name)
+                                    print(str(line_count_2 + 1) + " " + ((f.readlines()[line_count_1])[8:]))
+                            elif line_count_2 > 8:
+                                if (line_count_2 + 1) <= class_ing_number:
+                                    f = open(file_name)
+                                    print(str(line_count_2 + 1) + " " + ((f.readlines()[line_count_1])[9:]))
+                            line_count_2 = line_count_2 + 1
+                        line_count_1 = line_count_1 + 1
+                    attend_class_number = input("输入您要上的课序号: ")
+                    if int(attend_class_number) <= class_ing_number:
+                        # print(line_count_2)
+                        info_reader()
+                        print(" ")
+                        sif_dontlockclass = input("是否取消自动锁定课堂？ （y/n）")
+                        if ("y" in sif_dontlockclass) or ("Y" in sif_dontlockclass):
+                            ClassAutoLock = "0"
+                        elif ("n" in sif_dontlockclass) or ("N" in sif_dontlockclass):
+                            ClassAutoLock = "1"
+                        sif_showonlinecount = input("是否显示课堂在线人数？ （y/n）")
+                        if ("y" in sif_showonlinecount) or ("Y" in sif_showonlinecount):
+                            ShowUserCount = "1"
+                        elif ("n" in sif_showonlinecount) or ("N" in sif_showonlinecount):
+                            ShowUserCount = "1"
+                        sif_recordallowed = input("是否解除录屏限制？ （y/n）")
+                        if ("y" in sif_recordallowed) or ("Y" in sif_recordallowed):
+                            RecordBlackList = ""
+                        print("开始生成shell命令")
+                        f = open(file_name)
+                        updatedirurl = (f.readlines()[3])[13:]
+                        f.close
+                        f = open(file_name)
+                        exeurl = (f.readlines()[6])[7:]
+                        f.close
+                        shell_maker()
+                        print("shell命令生成成功")
+                        print("正在启动无限宝")
+                        # f = open("wxb_shell.txt", "w")
+                        # f.write(r_s)
+                        # f.close()
+                        # os.startfile("wxb_open.exe")
+                        win32api.ShellExecute(0, 'open', imeetingpath, r_s, '', 1)
+                        # win32api.ShellExecute(0, 'open',"wxb_open.exe",'', '', 1)
 
-        input("按任意键返回主菜单...")
-
-    elif main_choice == "2":
-        print("自动上课")
-        print("Devloping...")
-
-        #t = Timer(10.0, auto_class)
-        #t.start()
-
-    elif main_choice == "3":
-        # 信息
-        get_wxb_response()
-
-        f = open(file_name)
-        r_line2 = f.readlines()[2]
-        f.close
-        # 读取行数
-        line_count = 0
-        f = open(file_name, "r")
-        for line in f.readlines():
-            line_count = line_count + 1
-        f.close
-
-        cfg = ConfigParser()
-        cfg.read(file_name)
-        # print(cfg.sections())
-        # print(cfg.get('userinfo1', 'name'))
-        # 分析
-        if "[error]" in r_line2:
-            f = open(file_name)
-            r_line3 = f.readlines()[3]
-            f = open(file_name)
-            r_line4 = f.readlines()[4]
-            print("发生错误 " + r_line3[6:] + r_line4[8:])
-        elif "[userinfo1]" in r_line2 or "[update]" in r_line2:
-            webuserid = cfg.get('userinfo1', 'webuserid')
-            user_name = cfg.get('userinfo1', 'username')
-            name = cfg.get('userinfo1', 'name')
-            unit = cfg.get('userinfo1', 'unit')
-            class_name = cfg.get('userinfo1', 'classname')
-            role = cfg.get('userinfo1', 'role')
-            f = open(file_name)
-            webuserid = (f.readlines()[3])[10:]
-            webuserid_1 = webuserid.encode("utf-8")
-            s_userid = base64.b64encode(webuserid_1)
-            s_userid = str(s_userid, 'utf-8')
-            # print(s_userid)
-            # s_userid = base64.b64encode(str(webuserid_1))  # base64加密
-            # base64.b64decode("YWFh")  # base64解密
-            s_userid = string_to_md5(s_userid)
-            white_list = requests.get("https://bhscer.github.io/wxb_py/files/white_list.txt")
-            # print(white_list.content.decode(r.encoding))
-            if s_userid in (white_list.content.decode(r.encoding)):
-                s_allowed_flag = "已授权"
+                    else:
+                        print("你输入的内容有误")
             else:
-                s_allowed_flag = "未授权"
-            print(name.replace("\n",
-                               "") + " " + role + "\n" + unit + "\n" + class_name + "\n" + user_name + "\n" + "s_id:" + s_userid.replace(
-                "\n", "") + " （" + s_allowed_flag + "）")
-            input("按任意键返回主菜单...")
-        else:
-            print("与服务器联系失败")
+                print("与服务器联系失败")
 
-    elif main_choice == "4":
-        if os.path.exists("user_info.txt"):
-            f = open("user_info.txt", 'r', encoding='UTF-8')
-            r_text = f.readlines()[0]  # 读取内容
+            input("按任意键返回主菜单...")
+
+        elif main_choice == "2":
+            print("自动上课")
+            print("Devloping...")
+
+            # t = Timer(10.0, auto_class)
+            # t.start()
+
+        elif main_choice == "3":
+            # 信息
+            get_wxb_response()
+
+            f = open(file_name)
+            r_line2 = f.readlines()[2]
+            f.close
+            # 读取行数
+            line_count = 0
+            f = open(file_name, "r")
+            for line in f.readlines():
+                line_count = line_count + 1
             f.close
 
-        if os.path.exists("user_info.txt") and (os.path.getsize("user_info.txt")) != 0 and ("£" in r_text) and (
-                "¢" in r_text) and ("∆" in r_text):  # 存在密码文件
-            n = 1
-            uid_time = 0
-            pwd_time = 0
-            while n <= len(r_text):
-                r_search_tmp = r_text[n:n + 1]
-                if r_search_tmp == "£":  # 读取域名
-                    r_prefix_end = n
-                    prefix = r_text[1:n]
-                if r_search_tmp == "¢":  # 读取账号
-                    uid_time = uid_time + 1
-                    r_uid_end = 0
-                    r_uid_start = r_prefix_end + 2
-                    if uid_time == 2:
-                        r_uid_end = n
-                    user_name = r_text[r_uid_start:r_uid_end]
-                if r_search_tmp == "∆":  # 读取密码
-                    pwd_time = pwd_time + 1
-                    r_pwd_end = 0
-                    r_pwd_start = r_uid_end + 2
-                    if pwd_time == 2:
-                        r_pwd_end = n
-                    password = r_text[r_pwd_start:r_pwd_end]
-                n = n + 1
-            # print("发现已保存的信息，正在登录")
-            print("域名：" + prefix)
-            print("账号：" + user_name)
-            input("按任意键返回主菜单...")
+            cfg = ConfigParser()
+            cfg.read(file_name)
+            # print(cfg.sections())
+            # print(cfg.get('userinfo1', 'name'))
+            # 分析
+            if "[error]" in r_line2:
+                f = open(file_name)
+                r_line3 = f.readlines()[3]
+                f = open(file_name)
+                r_line4 = f.readlines()[4]
+                print("发生错误 " + r_line3[6:] + r_line4[8:])
+            elif "[userinfo1]" in r_line2 or "[update]" in r_line2:
+                webuserid = cfg.get('userinfo1', 'webuserid')
+                user_name = cfg.get('userinfo1', 'username')
+                name = cfg.get('userinfo1', 'name')
+                unit = cfg.get('userinfo1', 'unit')
+                class_name = cfg.get('userinfo1', 'classname')
+                role = cfg.get('userinfo1', 'role')
+                f = open(file_name)
+                webuserid = (f.readlines()[3])[10:]
+                webuserid_1 = webuserid.encode("utf-8")
+                s_userid = base64.b64encode(webuserid_1)
+                s_userid = str(s_userid, 'utf-8')
+                # print(s_userid)
+                # s_userid = base64.b64encode(str(webuserid_1))  # base64加密
+                # base64.b64decode("YWFh")  # base64解密
+                s_userid = string_to_md5(s_userid)
+                white_list = requests.get("https://bhscer.github.io/wxb_py/files/white_list.txt")
+                # print(white_list.content.decode(r.encoding))
+                if s_userid in (white_list.content.decode(r.encoding)):
+                    s_allowed_flag = "已授权"
+                else:
+                    s_allowed_flag = "未授权"
+                print(name.replace("\n",
+                                   "") + " " + role + "\n" + unit + "\n" + class_name + "\n" + user_name + "\n" + "s_id:" + s_userid.replace(
+                    "\n", "") + " （" + s_allowed_flag + "）")
+                input("按任意键返回主菜单...")
+            else:
+                print("与服务器联系失败")
 
-    elif main_choice == "5":
-        if app_newest == 1:
-            app_update_info = "（最新版）"
+        elif main_choice == "4":
+            if os.path.exists("user_info.txt"):
+                f = open("user_info.txt", 'r', encoding='UTF-8')
+                r_text = f.readlines()[0]  # 读取内容
+                f.close
+
+            if os.path.exists("user_info.txt") and (os.path.getsize("user_info.txt")) != 0 and ("£" in r_text) and (
+                    "¢" in r_text) and ("∆" in r_text):  # 存在密码文件
+                n = 1
+                uid_time = 0
+                pwd_time = 0
+                while n <= len(r_text):
+                    r_search_tmp = r_text[n:n + 1]
+                    if r_search_tmp == "£":  # 读取域名
+                        r_prefix_end = n
+                        prefix = r_text[1:n]
+                    if r_search_tmp == "¢":  # 读取账号
+                        uid_time = uid_time + 1
+                        r_uid_end = 0
+                        r_uid_start = r_prefix_end + 2
+                        if uid_time == 2:
+                            r_uid_end = n
+                        user_name = r_text[r_uid_start:r_uid_end]
+                    if r_search_tmp == "∆":  # 读取密码
+                        pwd_time = pwd_time + 1
+                        r_pwd_end = 0
+                        r_pwd_start = r_uid_end + 2
+                        if pwd_time == 2:
+                            r_pwd_end = n
+                        password = r_text[r_pwd_start:r_pwd_end]
+                    n = n + 1
+                # print("发现已保存的信息，正在登录")
+                print("域名：" + prefix)
+                print("账号：" + user_name)
+                input("按任意键返回主菜单...")
+
+        elif main_choice == "5":
+            if app_newest == 1:
+                app_update_info = "（最新版）"
+            else:
+                app_update_info = "（最新为" + str(app_v_newest) + "）"
+            print("app版本：" + str(app_version) + app_update_info)
+            print("imeeting文件：" + imeetingpath)
+            print("Powered by Python")
+            print("https://github.com/Bhscer/VizpowerTools")
+            # print(list(getPING("www.baidu.com")))
+            input("按任意键返回主菜单...")
+    else:
+        messagebox.askokcancel("Hello Python", "输入有误")
+def main_main():
+    ui_label_wxbpath = Label(windows, justify=LEFT)
+    ui_label_wxbpath.place(height=20, width=260, x=5, y=380)
+    ui_label_wxbpath["text"] = (imeetingpath)
+    # ui_label_main = Label(windows)
+    # ui_label_main.place(height=170, width=360, x=20, y=25)
+    # main_menu_text = "***************\n"+"\n"+"1.单门上课" \
+    #                                              "\n"+"2.自动上课\n"+"3.用户信息\n"+"4.账号管理\n"+"5.软件设置\n"+"\n"+"***************\n"
+    # ui_label_main["text"]=(main_menu_text)
+    ui_buttom_main_choice1 = Button(windows, text="单门上课", command=main_choice_1)
+    ui_buttom_main_choice1.place(height=40, width=80, x=210, y=80)
+    ui_buttom_main_choice2 = Button(windows, text="自动上课")
+    ui_buttom_main_choice2.place(height=40, width=80, x=210, y=120)
+    ui_buttom_main_choice3 = Button(windows, text="用户信息")
+    ui_buttom_main_choice3.place(height=40, width=80, x=210, y=160)
+    ui_buttom_main_choice4 = Button(windows, text="账号管理")
+    ui_buttom_main_choice4.place(height=40, width=80, x=210, y=200)
+    ui_buttom_main_choice5 = Button(windows, text="软件设置", command=main_choice_5)
+    ui_buttom_main_choice5.place(height=40, width=80, x=210, y=240)
+
+
+def main_login():
+    prefix = ui_login_textbox_prefix.get()
+    user_name=ui_login_textbox_username.get()
+    password = ui_login_textbox_password.get()
+    get_wxb_response()
+    cfg = ConfigParser()
+    cfg.read(file_name)
+    print(cfg.sections())
+
+    if 'error' in cfg.sections() and not(cfg['error']['message'] == "您最近没有要上的课程！" ):
+        error_message = (cfg['error']['message'])
+        ui_login_label_error = Label(login_windows, justify=CENTER, text=("发生错误 " + error_message ))
+        ui_login_label_error.place(x=200, y=300)
+        ui_login_label_error.pack
+    else:
+        remembered = 1
+        settings_data = {'user_info': {'prefix': prefix, 'username': user_name, 'password': password}}
+        with open('settings.json', 'w') as f:
+            json.dump(settings_data, f, indent=4)
+        login_windows.destroy()
+
+def main_choice_1():
+    classlist_windows = Toplevel()
+    classlist_windows.geometry('500x400')
+    classlist_windows.title("无限宝登录工具 v" + str(app_version))
+    classlist_windows.resizable(0, 0)
+    ui_classlist_label1 = Label(classlist_windows, justify=CENTER)
+    ui_classlist_label1.place(height=20, x=200, y=300)
+    ui_classlist_label1["text"] = ("正在登录")
+    get_wxb_response()
+    cfg = ConfigParser()
+    cfg.read(file_name)
+    #print(cfg.sections())
+    if 'error' in cfg.sections():
+        ui_classlist_label1["text"] = (cfg['error']['message'])
+    elif 'update' in cfg.sections():
+        ui_classlist_label1["text"] = ("登陆成功")
+        f = open(file_name)
+        class_ing_text1 = (f.readlines()[18])[5:]
+        f.close
+        # print(len(class_ing_text1))
+        class_ing_number = 0
+        if len(class_ing_text1) == 2:
+            class_ing_number = 1
+        elif 3 <= len(class_ing_text1) <= 17:
+            class_ing_number = ((len(class_ing_text1)) / 2)
+        elif len(class_ing_text1) > 17:
+            class_ing_number = 9 + (((len(class_ing_text1) - 18)) / 3)
+        if class_ing_number == 0:
+            ui_classlist_label1["text"] = ("您没有正在上的课哦")
         else:
-            app_update_info = "（最新为" + str(app_v_newest) + "）"
-        print("app版本：" + str(app_version) + app_update_info)
-        print("imeeting文件：" + imeetingpath)
-        print("Powered by Python")
-        print("https://github.com/Bhscer/VizpowerTools")
-        #print(list(getPING("www.baidu.com")))
-        input("按任意键返回主菜单...")
+            print(" ")
+            ui_classlist_label1["text"] =  ("您现在有 " + str(int(class_ing_number)) + " 节直播课")
+            print(" ")
+            ui_classlist_label2 = Label(classlist_windows, justify=LEFT)
+            ui_classlist_label2.place(height=20, x=220, y=60)
+            ui_classlist_label2["text"] = ("正在获取课程")
+            line_count_1 = 0
+            line_count_2 = 0
+            while line_count_1 < line_count:
+                f = open(file_name)
+                if "mtname" in (f.readlines()[line_count_1]):
+                    if line_count_2 < 8:
+                        if (line_count_2 + 1) <= class_ing_number:
+                            f = open(file_name)
+                            ui_classlist_label2["text"] = (str(line_count_2 + 1) + " " + ((f.readlines()[line_count_1])[8:]))
+                    elif line_count_2 > 8:
+                        if (line_count_2 + 1) <= class_ing_number:
+                            f = open(file_name)
+                            ui_classlist_label2["text"] = (str(line_count_2 + 1) + " " + ((f.readlines()[line_count_1])[9:]))
+                    line_count_2 = line_count_2 + 1
+                line_count_1 = line_count_1 + 1
+            attend_class_number = input("输入您要上的课序号: ")
+            if int(attend_class_number) <= class_ing_number:
+                # print(line_count_2)
+                info_reader()
+                print(" ")
+                sif_dontlockclass = input("是否取消自动锁定课堂？ （y/n）")
+                if ("y" in sif_dontlockclass) or ("Y" in sif_dontlockclass):
+                    ClassAutoLock = "0"
+                elif ("n" in sif_dontlockclass) or ("N" in sif_dontlockclass):
+                    ClassAutoLock = "1"
+                sif_showonlinecount = input("是否显示课堂在线人数？ （y/n）")
+                if ("y" in sif_showonlinecount) or ("Y" in sif_showonlinecount):
+                    ShowUserCount = "1"
+                elif ("n" in sif_showonlinecount) or ("N" in sif_showonlinecount):
+                    ShowUserCount = "1"
+                sif_recordallowed = input("是否解除录屏限制？ （y/n）")
+                if ("y" in sif_recordallowed) or ("Y" in sif_recordallowed):
+                    RecordBlackList = ""
+                print("开始生成shell命令")
+                f = open(file_name)
+                updatedirurl = (f.readlines()[3])[13:]
+                f.close
+                f = open(file_name)
+                exeurl = (f.readlines()[6])[7:]
+                f.close
+                shell_maker()
+                print("shell命令生成成功")
+                print("正在启动无限宝")
+                # f = open("wxb_shell.txt", "w")
+                # f.write(r_s)
+                # f.close()
+                # os.startfile("wxb_open.exe")
+                win32api.ShellExecute(0, 'open', imeetingpath, r_s, '', 1)
+                # win32api.ShellExecute(0, 'open',"wxb_open.exe",'', '', 1)
+
+            else:
+                print("你输入的内容有误")
+    else:
+        print("与服务器联系失败")
+def main_choice_3():
+    userinfo_windows = Toplevel()
+    userinfo_windows.geometry('500x400')
+    userinfo_windows.title("无限宝登录工具 v" + str(app_version))
+    userinfo_windows.resizable(0, 0)
+    ui_userinfo_label1 = Label(userinfo_windows, justify=CENTER)
+    ui_userinfo_label1.place(height=20, x=200, y=300)
+    ui_userinfo_label1["text"] = ("正在登录")
+    # 信息
+    get_wxb_response()
+    cfg = ConfigParser()
+    cfg.read(file_name)
+    # print(cfg.sections())
+    if 'error' in cfg.sections() and not(cfg['error']['message'] == "您最近没有要上的课程！" ):
+        ui_userinfo_label1["text"] = (cfg['error']['message'])
+    elif ('error' in cfg.sections() and (cfg['error']['message'] == "您最近没有要上的课程！" )) or 'update' in cfg.sections():
+        webuserid = cfg.get('userinfo1', 'webuserid')
+        user_name = cfg.get('userinfo1', 'username')
+        name = cfg.get('userinfo1', 'name')
+        unit = cfg.get('userinfo1', 'unit')
+        class_name = cfg.get('userinfo1', 'classname')
+        role = cfg.get('userinfo1', 'role')
+        f = open(file_name)
+        username = cfg.get('userinfo1', 'username')
+        username_1 = username.encode("utf-8")
+        s_userid = base64.b64encode(username_1)
+        s_userid = str(s_userid, 'utf-8')
+        # print(s_userid)
+        # s_userid = base64.b64encode(str(webuserid_1))  # base64加密
+        # base64.b64decode("YWFh")  # base64解密
+        s_userid = string_to_md5(s_userid)
+        white_list = requests.get("https://bhscer.github.io/wxb_py/files/white_list.txt")
+        # print(white_list.content.decode(r.encoding))
+        if s_userid in (white_list):
+            s_allowed_flag = "已授权"
+        else:
+            s_allowed_flag = "未授权"
+        ui_userinfo_label2 = Label(userinfo_windows, justify=LEFT)
+        ui_userinfo_label2.place(x=20, y=300)
+        def copy_id():
+            pyperclip.copy(s_userid.replace("\n", ""))
+        ui_userinfo_label2["text"] = (name.replace("\n",
+                           "") + " " + role + "\n" + unit + "\n" + class_name + "\n" + user_name + "\n" + "s_id:" + s_userid.replace(
+            "\n", "") + " （" + s_allowed_flag + "）")
+        cmd_copy = Button(userinfo_windows, text="复制", command=copy_id())
+        cmd_copy.place(x=120, y=213)
+    else:
+        ui_userinfo_label1["text"] = ("与服务器联系失败")
+def main_choice_5():
+    about_windows = Toplevel()
+    about_windows.geometry('500x400')
+    about_windows.title("无限宝登录工具 v" + str(app_version))
+    about_windows.resizable(0, 0)
+
+    ui_about_label1 = Label(about_windows,justify=LEFT)
+    ui_about_label1.place(height=20, x=220, y=60)
+    ui_about_label1["text"]=("作者：Bhscer")
+    ui_about_label2 = Label(about_windows, justify=LEFT)
+    ui_about_label2.place(height=20, x=220, y=100)
+    ui_about_label2["text"] = ("https://github.com/Bhscer/VizpowerTools")
+    if app_newest == 1:
+        app_update_info = "（最新版）"
+    else:
+        app_update_info = "（最新为" + str(app_v_newest) + "）"
+    ui_about_label3 = Label(about_windows, justify=LEFT)
+    ui_about_label3.place(height=20, x=220, y=140)
+    ui_about_label3["text"] = ("app版本：" + str(app_version) + app_update_info)
+    ui_about_label4 = Label(about_windows, justify=LEFT)
+    ui_about_label4.place(height=20, x=220, y=180)
+    ui_about_label4["text"] = ("Powered by Python")
+
+    ui_about_pic1_load = Image.open('res\pic\pic_about_python.png')  # 我图片放桌面上
+    ui_about_pic1_address = ImageTk.PhotoImage(ui_about_pic1_load)
+    ui_about_pic1 = Label(about_windows, image=ui_about_pic1_address)
+    ui_about_pic1.image = ui_about_pic1_address
+    ui_about_pic1.place(x=30, y=60)
+    ui_about_pic2_load = Image.open('res\pic\pic_about_kehou.png')  # 我图片放桌面上
+    ui_about_pic2_address = ImageTk.PhotoImage(ui_about_pic2_load)
+    ui_about_pic2 = Label(about_windows, image=ui_about_pic2_address)
+    ui_about_pic2.image = ui_about_pic2_address
+    ui_about_pic2.place(x=30, y=220)
+
+    ui_about_label5 = Label(about_windows, justify=LEFT)
+    ui_about_label5.place(height=60, x=220, y=220)
+    ui_about_label5["text"] = ("“无限宝””课后网“由\n“浙江万朋教育科技股份有限公司”版权所有\n一切由于修改产生的后果由使用者自己承担")
+    ui_about_label6 = Label(about_windows, justify=LEFT)
+    ui_about_label6.place(height=60, x=220, y=260)
+    ui_about_label6["text"] = ("")
+
+
+logined_flag = "0"
+#r = requests.get("https://bhscer.github.io/wxb_py/files/app_info.json")
+update_file_name = "app_info.json"
+#with open(update_file_name, "wb") as code:
+    #code.write(r.content)
+load_windows = Tk()
+load_windows.title("loading")
+#load_windows.geometry('600x400')
+ui_load_pic1_load = Image.open('res\pic\pic_load_connectapp.png')  # 我图片放桌面上
+ui_load_pic1_address = ImageTk.PhotoImage(ui_load_pic1_load)
+ui_load_pic1 = Label(load_windows, image=ui_load_pic1_address)
+ui_load_pic1.image = ui_load_pic1_address
+ui_load_pic1.place(x=-2, y=-2)
+load_windows.overrideredirect(1)
+sw = load_windows.winfo_screenwidth()
+#得到屏幕宽度
+sh = load_windows.winfo_screenheight()
+#得到屏幕高度
+ww = 600
+wh = 400
+#窗口宽高为100
+x = (sw-ww) / 2
+y = (sh-wh) / 2
+load_windows.geometry("%dx%d+%d+%d" %(ww,wh,x,y))
+#load_windows.mainloop()
+with open("app_info.json", 'r') as f:
+    a = json.load(f)
+if a['avliable'] == 1:
+    if a['newest_version'] != app_version:
+        load_windows.overrideredirect(0)
+        ui_load_pic1_load = Image.open('res\pic\pic_load_update.png')
+        ui_load_pic1_address = ImageTk.PhotoImage(ui_load_pic1_load)
+        ui_load_pic1 = Label(load_windows, image=ui_load_pic1_address)
+        ui_load_pic1.image = ui_load_pic1_address
+        ui_load_pic1.place(x=-2, y=-2)
+        ui_label_main = Label(load_windows,justify=LEFT)
+        ui_label_main.place(x=40, y=220)
+        ui_label_main.pack
+        app_v_newest = a['newest_version']
+        load_windows.title("发现新版本" + str(app_v_newest))
+        app_newest = 0
+        if a['must_update'] == 1:
+            ui_label_main["text"]=((a['update_log']) + "该版本为强制更新版本" )
+            cmd1 = Button(load_windows, text="升级")#, command=main_choice_m)
+            cmd1.place(height=33, width=60, x=340, y=220)
+        elif a['must_update'] == 0:
+            ui_label_main["text"]=((a['update_log']))
+            cmd1 = Button(load_windows, text="升级")#, command=main_choice_m)
+            cmd1.place(height=33, width=80, x=450, y=220)
+            cmd2 = Button(load_windows, text="以后", command=close_update_windows)
+            cmd2.place(height=33, width=80, x=450, y=270)
+        #update_windows.mainloop()
+    else:
+        app_newest = 1
+elif a['avliable'] == 0:
+    update_windows = Tk()
+    update_windows.geometry('400x300')
+    update_windows.title("发现新版本" + str(app_v_newest))
+    update_windows.resizable(0, 0)
+    Entry1 = Entry(update_windows)
+    Entry1.place(height=170, width=360, x=20, y=25)
+    Entry1.insert(0, (a['close_message']))
+    exit_app()
+#os.remove(update_file_name)
+
+
+
+login_windows = Tk()
+login_windows.geometry('500x400')
+login_windows.title("登录")
+login_windows.resizable(0,0)
+ui_login_textbox_prefix=Entry(login_windows)
+ui_login_textbox_prefix.place(height = 33,width = 200,x = 150,y = 100)
+ui_login_label_prefix=Label(login_windows,justify=LEFT,text="域名")
+ui_login_label_prefix.place(x = 100,y = 100)
+ui_login_textbox_username=Entry(login_windows)
+ui_login_textbox_username.place(height = 33,width = 200,x = 150,y = 150)
+ui_login_label_username=Label(login_windows,justify=LEFT,text="账号")
+ui_login_label_username.place(x = 100,y = 150)
+ui_login_textbox_password=Entry(login_windows)
+ui_login_textbox_password.place(height = 33,width = 200,x = 150,y = 200)
+ui_login_label_password=Label(login_windows,justify=LEFT,text="密码")
+ui_login_label_password.place(x = 100,y = 200)
+cmd1 = Button(login_windows, text ="登录", command = main_login)
+cmd1.place(height = 33,width = 60,x = 220,y = 250)
+ui_label_wxbpath = Label(login_windows,justify=LEFT)
+ui_label_wxbpath.place(height=20, width=260, x=5, y=380)
+ui_label_wxbpath["text"]=(imeetingpath)
+if os.path.exists("settings.json") :  #存在密码文件
+    with open("settings.json", 'r') as f:
+        a = json.load(f)
+    prefix = a['user_info']['prefix']
+    user_name = a['user_info']['username']
+    password = a['user_info']['password']
+    ui_login_textbox_prefix.insert(0, prefix)
+    ui_login_textbox_username.insert(0, user_name)
+    ui_login_textbox_password.insert(0, password)
+    get_wxb_response()
+    cfg = ConfigParser()
+    cfg.read(file_name)
+    # print(cfg.sections())
+    if 'error' in cfg.sections() and not (cfg['error']['message'] == "您最近没有要上的课程！"):
+        login_windows.mainloop()
+    elif ('error' in cfg.sections() and (cfg['error']['message'] == "您最近没有要上的课程！" )) or 'update' in cfg.sections():
+        login_windows.withdraw()
+else:
+    login_windows.mainloop()
+
+
+windows = Tk()
+windows.geometry('500x400')
+windows.title("无限宝登录工具 v" + str(app_version))
+windows.resizable(0,0)
+
+ui_label_wxbpath = Label(windows,justify=LEFT)
+ui_label_wxbpath.place(height=20, width=260, x=5, y=380)
+ui_label_wxbpath["text"]=(imeetingpath)
+#ui_label_main = Label(windows)
+#ui_label_main.place(height=170, width=360, x=20, y=25)
+#main_menu_text = "***************\n"+"\n"+"1.单门上课" \
+#                                              "\n"+"2.自动上课\n"+"3.用户信息\n"+"4.账号管理\n"+"5.软件设置\n"+"\n"+"***************\n"
+#ui_label_main["text"]=(main_menu_text)
+user_info_reader()
+name = cfg.get('userinfo1', 'name')
+
+ui_main_label_name = Label(windows,justify=LEFT)
+ui_main_label_name.place(height=20, width=260, x=5, y=30)
+ui_main_label_name["text"]=("你好 " + name)
+ui_buttom_main_choice1 = Button ( windows,text="单门上课",command = main_choice_1)
+ui_buttom_main_choice1.place(height=40, width=80, x=210, y=80)
+ui_buttom_main_choice2 = Button ( windows,text="自动上课")
+ui_buttom_main_choice2.place(height=40, width=80, x=210, y=120)
+ui_buttom_main_choice3 = Button ( windows,text="用户信息",command = main_choice_3)
+ui_buttom_main_choice3.place(height=40, width=80, x=210, y=160)
+ui_buttom_main_choice4 = Button ( windows,text="账号管理")
+ui_buttom_main_choice4.place(height=40, width=80, x=210, y=200)
+ui_buttom_main_choice5 = Button ( windows,text="软件设置",command = main_choice_5)
+ui_buttom_main_choice5.place(height=40, width=80, x=210, y=240)
+if os.path.exists("settings.json") :  #存在密码文件
+    windows.mainloop()
+
+
 
 #os.remove(file_name)
 

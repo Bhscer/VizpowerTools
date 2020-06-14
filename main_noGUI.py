@@ -12,8 +12,8 @@ import subprocess
 
 app_version = 1.01
 
-r = requests.get("https://bhscer.github.io/wxb_py/files/app_info.json")
-update_file_name = "app_info.json"
+r = requests.get("https://bhscer.github.io/wxb_py/files/app_info_noGUI.json")
+update_file_name = "app_info_noGUI.json"
 with open(update_file_name, "wb") as code:
     code.write(r.content)
 with open("app_info.json", 'r') as f:
@@ -331,15 +331,7 @@ def auto_class():
 file_name = "wxb_response.ini"
 
 while 1 == 1:
-    print("\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n"
-          "\n")
+
     print("无限宝登录工具 v" + str(app_version))
     print("***************\n"
           "\n"
@@ -570,7 +562,7 @@ while 1 == 1:
             app_update_info = "（最新版）"
         else:
             app_update_info = "（最新为" + str(app_v_newest) + "）"
-        print("app版本：" + str(app_version) + app_update_info)
+        print("app版本：" + str(app_version) + app_update_info +"noGUI version")
         print("imeeting文件：" + imeetingpath)
         print("Powered by Python")
         print("https://github.com/Bhscer/VizpowerTools")
